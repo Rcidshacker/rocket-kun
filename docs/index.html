@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rocket-kun results explorer</title>
+<meta name="description" content="Interactive results for a lunar-lander reinforcement-learning study: a gameable reward, its fix, and copying a teacher first.">
+<style>
+:root{--bg:#fff;--fg:#1a1d21;--muted:#5b6470;--card:#f4f5f7;--line:#d8dce2;--accent:#0b5fff}
+@media (prefers-color-scheme:dark){:root{--bg:#0e1117;--fg:#e8ebf0;--muted:#9aa4b2;--card:#161b22;--line:#2d333b;--accent:#6ea8ff}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.5 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+main{max-width:960px;margin:0 auto;padding:24px 16px 64px}
+h1{margin:0 0 4px;font-size:1.9rem}
+h2{margin:40px 0 12px;font-size:1.25rem}
+.sub{color:var(--muted);margin:0 0 20px}
+a{color:var(--accent)}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px}
+.controls{display:flex;flex-wrap:wrap;gap:16px 32px;margin-bottom:12px}
+fieldset{border:0;margin:0;padding:0;min-width:0}
+legend{font-size:.8rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);padding:0;margin-bottom:6px}
+label{display:inline-flex;align-items:center;gap:6px;margin:0 14px 4px 0;cursor:pointer;font-size:.92rem}
+.sw{width:11px;height:11px;border-radius:3px;display:inline-block}
+svg{width:100%;height:auto;display:block}
+.axis{stroke:var(--line)}
+.tick{fill:var(--muted);font-size:12px}
+.lbl{fill:var(--fg);font-size:12px}
+.ref{stroke:var(--muted);stroke-dasharray:5 4}
+.reflbl{fill:var(--muted);font-size:11px}
+.item{outline:none;cursor:default}
+.item:focus-visible rect.bar,.item:hover rect.bar{stroke:var(--fg);stroke-width:2}
+.note{margin:12px 0 0;min-height:3em}
+#tip{position:fixed;pointer-events:none;z-index:5;background:var(--bg);color:var(--fg);border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-size:.82rem;box-shadow:0 4px 18px rgba(0,0,0,.25);max-width:290px;display:none}
+#tip b{display:block;margin-bottom:2px}
+.gifs{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+figure{margin:0;text-align:center}
+figure img{width:100%;max-width:320px;border-radius:8px;border:1px solid var(--line)}
+figcaption{font-size:.88rem;color:var(--muted);margin-top:6px}
+.tw{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:.88rem}
+th,td{padding:6px 10px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+th:first-child,td:first-child,th:nth-child(2),td:nth-child(2){text-align:left}
+th{color:var(--muted);font-weight:600}
+.small{font-size:.86rem;color:var(--muted)}
+</style>
+</head>
+<body>
+<main>
+<h1>🚀 Rocket-kun results explorer</h1>
+<p class="sub">A lunar lander learns to land with PPO. One reward rule is gameable, one is its fix, and one setup copies a teacher first.
+Every number is the raw game score over 100 fresh flights. <a href="https://github.com/Rcidshacker/rocket-kun">Code and write-up on GitHub</a>.</p>
+
+<div class="panel">
+  <div class="controls">
+    <fieldset><legend>Metric</legend>
+      <label><input type="radio" name="metric" value="score" checked> Score</label>
+      <label><input type="radio" name="metric" value="solved"> Reached 200</label>
+      <label><input type="radio" name="metric" value="frames"> Frames per flight</label>
+    </fieldset>
+    <fieldset><legend>View</legend>
+      <label><input type="radio" name="view" value="group" checked> Average of 3 seeds</label>
+      <label><input type="radio" name="view" value="seed"> Every seed</label>
+    </fieldset>
+  </div>
+  <fieldset><legend>Setups</legend><div id="groups"></div></fieldset>
+  <svg id="chart" viewBox="0 0 900 440" role="group" aria-label="Bar chart of results"></svg>
+  <p class="note" id="note"></p>
+  <p class="small">Bars are the mean. Dots are the individual seeds. Whiskers (score only) are the typical flight-to-flight spread, ±1 standard deviation. Hover or tab to a bar for details.</p>
+</div>
+<noscript><p>This page needs JavaScript for the chart. The full numbers are in the table below, and in the repository's results.txt.</p></noscript>
+
+<h2>See the flights</h2>
+<div class="gifs">
+  <figure><img src="assets/crash.gif" alt="A rocket pressing random buttons and crashing" loading="lazy"><figcaption><b>Random buttons</b><br>crashes in 1.5 s</figcaption></figure>
+  <figure><img src="assets/hover.gif" alt="A rocket hovering without landing" loading="lazy"><figcaption><b>Gameable reward</b><br>seed 2 never lands (first 14 s shown)</figcaption></figure>
+  <figure><img src="assets/teacher.gif" alt="A rocket landing between the flags" loading="lazy"><figcaption><b>Teacher, then practise</b><br>lands in 224 frames (4.5 s)</figcaption></figure>
+</div>
+
+<h2>Every model</h2>
+<div class="tw"><table id="tbl"><thead><tr><th>Setup</th><th>Seed</th><th>Score</th><th>Spread (±1 sd)</th><th>Reached 200</th><th>Frames</th></tr></thead><tbody></tbody></table></div>
+
+<h2>How to read this</h2>
+<p class="small">Each setup was trained with 3 seeds (the time fee, the crash penalty and the autopilot have fewer). Models are scored with my reward wrapper switched off, deterministic actions,
+100 fresh flights each. 200 points is Gymnasium's "solved" bar and 1000 frames is the episode limit. Three seeds is a small sample and re-scoring moves a mean by about 5 points,
+so treat small gaps as noise. The teacher-trained setup also got extra compute and data. More caveats are in the <a href="https://github.com/Rcidshacker/rocket-kun#readme">README</a>.</p>
+</main>
+<div id="tip" role="tooltip"></div>
+
+<script>
+// run = [seed, mean score, spread (sd over 100 flights), % flights >= 200, mean frames]
+const GROUPS = [
+  {id:'auto', name:'Autopilot (the teacher)', short:'autopilot', color:'#8b95a5', runs:[['scored once', 233.1, 111.4, 90, 235]]},
+  {id:'none', name:'Self-learn, game reward', short:'self-learn', color:'#2f80ed', runs:[['s0',257.9,35.4,96,342],['s1',253.8,22.4,100,340],['s2',263.9,21.4,100,326]]},
+  {id:'hover', name:'Hover bug (gameable reward)', short:'hover bug', color:'#e5603b', runs:[['s0',156.0,27.1,4,873],['s1',51.7,94.1,10,926],['s2',-78.1,31.0,0,1000]]},
+  {id:'fixed', name:'Self-learn, fixed reward', short:'fixed', color:'#17a673', runs:[['s0',262.1,29.1,99,295],['s1',263.9,20.0,100,305],['s2',256.8,22.3,98,345]]},
+  {id:'copy', name:'Copy of the teacher only', short:'copy only', color:'#e0a100', runs:[['s0',241.0,85.8,92,258],['s1',250.6,82.2,92,255],['s2',245.8,97.8,92,253]]},
+  {id:'teach', name:'Teacher, then practise', short:'teacher+practice', color:'#c653a6', runs:[['s0',272.3,42.6,99,230],['s1',277.0,19.4,100,218],['s2',276.8,18.2,100,225]]},
+  {id:'time', name:'Time fee (1 seed)', short:'time fee', color:'#4cc0d8', runs:[['s0',249.8,23.0,98,361]]},
+  {id:'safe', name:'Crash penalty (1 seed)', short:'crash penalty', color:'#7c6be0', runs:[['s0',253.2,96.9,95,257]]},
+];
+const METRICS = {
+  score:  {idx:1, min:-100, max:300, ticks:[-100,0,100,200,300], fmt:v=>v.toFixed(1), unit:'score', ref:200, refLabel:'200 = "solved"',
+    note:'Teacher then practise scores highest (about 275). The hover bug collapses: seed 2 averages -78, and seeds 0 and 1 linger or land late.'},
+  solved: {idx:3, min:0, max:100, ticks:[0,25,50,75,100], fmt:v=>v.toFixed(0)+'%', unit:'flights reaching 200',
+    note:'Self-learn and teacher-trained runs reach 200 on about 99% of flights. Copying alone stays near 92%, and the hover bug almost never gets there.'},
+  frames: {idx:4, min:0, max:1000, ticks:[0,250,500,750,1000], fmt:v=>Math.round(v), unit:'frames', ref:1000, refLabel:'1000-frame limit',
+    note:'Teacher-trained flights are the shortest (about 224 frames, under the autopilot\'s 235). The hover bug runs to the 1000-frame limit.'},
+};
+const $ = s => document.querySelector(s), SVG = 'http://www.w3.org/2000/svg';
+const state = {metric:'score', view:'group', on:new Set(GROUPS.map(g => g.id))};
+const avg = a => a.reduce((x, y) => x + y, 0) / a.length;
+const mk = (tag, attrs, parent) => { const e = document.createElementNS(SVG, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (parent) parent.appendChild(e); return e; };
+const runLine = (seed, r) => `${seed ? seed + ': ' : ''}score ${r[1].toFixed(1)} ± ${r[2].toFixed(1)}, ${r[3]}% reached 200, ${r[4]} frames`;
+
+function items() {
+  const out = [];
+  for (const g of GROUPS) {
+    if (!state.on.has(g.id)) continue;
+    const m = METRICS[state.metric];
+    if (state.view === 'group') {
+      out.push({g, label: g.short, value: avg(g.runs.map(r => r[m.idx])), spread: avg(g.runs.map(r => r[2])),
+        dots: g.runs.length > 1 ? g.runs.map(r => r[m.idx]) : [], tip: g.runs.map(r => runLine(r[0], r))});
+    } else {
+      for (const r of g.runs) out.push({g, label: g.short + (g.runs.length > 1 ? ' ' + r[0] : ''), value: r[m.idx], spread: r[2], dots: [], tip: [runLine('', r)]});
+    }
+  }
+  return out;
+}
+
+function draw() {
+  const m = METRICS[state.metric], svg = $('#chart'), L = 56, R = 104, T = 20, B = 120, W = 900, H = 440, ph = H - T - B;
+  svg.replaceChildren();
+  const y = v => T + (m.max - Math.min(m.max, Math.max(m.min, v))) / (m.max - m.min) * ph;
+  const base = y(Math.max(m.min, 0));
+  for (const t of m.ticks) {
+    mk('line', {x1: L, x2: W - R, y1: y(t), y2: y(t), class: 'axis'}, svg);
+    mk('text', {x: L - 8, y: y(t) + 4, 'text-anchor': 'end', class: 'tick'}, svg).textContent = t + (state.metric === 'solved' ? '%' : '');
+  }
+  if (m.ref !== undefined) {
+    mk('line', {x1: L, x2: W - R, y1: y(m.ref), y2: y(m.ref), class: 'ref'}, svg);
+    mk('text', {x: W - R + 6, y: y(m.ref) + 4, class: 'reflbl'}, svg).textContent = m.refLabel;
+  }
+  const its = items(), slot = (W - L - R) / Math.max(its.length, 1), bw = Math.min(56, slot * 0.62);
+  its.forEach((it, i) => {
+    const cx = L + slot * (i + 0.5), top = y(it.value);
+    const g = mk('g', {class: 'item', tabindex: 0, role: 'img', 'aria-label': `${it.g.name}: ${m.fmt(it.value)} ${m.unit}`}, svg);
+    mk('rect', {class: 'bar', x: cx - bw / 2, y: Math.min(top, base), width: bw, height: Math.max(2, Math.abs(base - top)), rx: 3, fill: it.g.color}, g);
+    if (state.metric === 'score') {
+      const a = y(it.value + it.spread), b = y(it.value - it.spread);
+      mk('line', {x1: cx, x2: cx, y1: a, y2: b, stroke: 'var(--fg)', 'stroke-width': 1.5}, g);
+      mk('line', {x1: cx - 5, x2: cx + 5, y1: a, y2: a, stroke: 'var(--fg)', 'stroke-width': 1.5}, g);
+      mk('line', {x1: cx - 5, x2: cx + 5, y1: b, y2: b, stroke: 'var(--fg)', 'stroke-width': 1.5}, g);
+    }
+    it.dots.forEach((d, j) => mk('circle', {cx: cx + (j - (it.dots.length - 1) / 2) * 12, cy: y(d), r: 4, fill: 'var(--bg)', stroke: it.g.color, 'stroke-width': 2}, g));
+    mk('text', {transform: `translate(${cx + 4},${H - B + 18}) rotate(-35)`, 'text-anchor': 'end', class: 'lbl'}, svg).textContent = it.label;
+    const show = e => tip(e, it, g), hide = () => ($('#tip').style.display = 'none');
+    g.addEventListener('mousemove', show); g.addEventListener('mouseleave', hide);
+    g.addEventListener('focus', () => { const r = g.getBoundingClientRect(); show({clientX: r.right, clientY: r.top}, it); }); g.addEventListener('blur', hide);
+  });
+  $('#note').textContent = m.note;
+}
+
+function tip(e, it) {
+  const t = $('#tip'); t.replaceChildren();
+  const b = document.createElement('b'); b.textContent = it.g.name; t.appendChild(b);
+  for (const line of it.tip) { const d = document.createElement('div'); d.textContent = line; t.appendChild(d); }
+  t.style.display = 'block';
+  const x = Math.min(e.clientX + 14, innerWidth - t.offsetWidth - 8), yy = Math.min(e.clientY + 14, innerHeight - t.offsetHeight - 8);
+  t.style.left = Math.max(8, x) + 'px'; t.style.top = Math.max(8, yy) + 'px';
+}
+
+function init() {
+  const box = $('#groups');
+  for (const g of GROUPS) {
+    const l = document.createElement('label'), c = document.createElement('input'), s = document.createElement('span'), n = document.createElement('span');
+    c.type = 'checkbox'; c.checked = true; c.addEventListener('change', () => { c.checked ? state.on.add(g.id) : state.on.delete(g.id); draw(); });
+    s.className = 'sw'; s.style.background = g.color; n.textContent = g.name;
+    l.append(c, s, n); box.appendChild(l);
+  }
+  document.querySelectorAll('input[name=metric]').forEach(r => r.addEventListener('change', () => { state.metric = r.value; draw(); }));
+  document.querySelectorAll('input[name=view]').forEach(r => r.addEventListener('change', () => { state.view = r.value; draw(); }));
+  const tb = $('#tbl tbody');
+  for (const g of GROUPS) for (const r of g.runs) {
+    const tr = tb.insertRow();
+    [g.name, r[0] || '-', r[1].toFixed(1), r[2].toFixed(1), r[3] + '%', r[4]].forEach(v => (tr.insertCell().textContent = v));
+  }
+  draw();
+}
+init();
+</script>
+</body>
+</html>
