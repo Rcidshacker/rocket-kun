@@ -1,0 +1,8 @@
+# Tested on Python 3.12 (Windows 11, CPU only). PyTorch comes in with stable-baselines3.
+# On Windows, gymnasium[box2d] builds box2d-py from source: `pip install swig` first and
+# have the MSVC Build Tools installed. My first attempt on Python 3.14 failed at that build
+# (no swig); I did not retry 3.13 or 3.14 afterwards, so 3.12 is the only tested version.
+gymnasium[box2d]==1.4.0
+stable-baselines3==2.9.0
+matplotlib==3.11.2
+moviepy==2.2.1

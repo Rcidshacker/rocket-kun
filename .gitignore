@@ -1,0 +1,7 @@
+.venv/
+__pycache__/
+*.pyc
+.claude/
+
+# third-party article this project was inspired by (not ours to redistribute)
+Training an AI to land a rocket*.md
