@@ -1,0 +1,15 @@
+recorded 74930 teacher moves from 300 flights
+copy matches the teacher's button on 96.2% of held-out moves
+stage 2: copy only           score  231.1 +/- 115.1  >=200:  88%  frames  253
+stage 3: after 100k warm-up  score  233.2 +/- 106.0  >=200:  90%  frames  239
+stage 4: +100k steps         score  228.3 +/- 119.7  >=200:  89%  frames  256
+stage 4: +200k steps         score  225.7 +/- 123.2  >=200:  87%  frames  277
+stage 4: +300k steps         score  230.6 +/- 132.1  >=200:  87%  frames  247
+stage 4: +400k steps         score  246.1 +/-  96.5  >=200:  91%  frames  249
+stage 4: +500k steps         score  259.0 +/-  85.3  >=200:  96%  frames  239
+stage 4: +600k steps         score  265.6 +/-  66.8  >=200:  97%  frames  238
+stage 4: +700k steps         score  270.9 +/-  46.1  >=200:  98%  frames  246
+stage 4: +800k steps         score  267.5 +/-  20.2  >=200: 100%  frames  253
+stage 4: +900k steps         score  258.4 +/-  75.2  >=200:  94%  frames  268
+stage 4: +1000k steps        score  273.3 +/-  34.2  >=200:  98%  frames  240
+saved models/teach_safe_s0
