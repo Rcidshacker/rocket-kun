@@ -1,0 +1,18 @@
+none_s0      mean   257.9 +/-  35.4  >=200:  96%  mean frames    342
+none_s1      mean   253.8 +/-  22.4  >=200: 100%  mean frames    340
+none_s2      mean   263.9 +/-  21.4  >=200: 100%  mean frames    326
+hover_s0     mean   156.0 +/-  27.1  >=200:   4%  mean frames    873
+hover_s1     mean    51.7 +/-  94.1  >=200:  10%  mean frames    926
+hover_s2     mean   -78.1 +/-  31.0  >=200:   0%  mean frames   1000
+fixed_s0     mean   262.1 +/-  29.1  >=200:  99%  mean frames    295
+fixed_s1     mean   263.9 +/-  20.0  >=200: 100%  mean frames    305
+fixed_s2     mean   256.8 +/-  22.3  >=200:  98%  mean frames    345
+copy_fixed_s0 mean   241.0 +/-  85.8  >=200:  92%  mean frames    258
+copy_fixed_s1 mean   250.6 +/-  82.2  >=200:  92%  mean frames    255
+copy_fixed_s2 mean   245.8 +/-  97.8  >=200:  92%  mean frames    253
+teach_fixed_s0 mean   272.3 +/-  42.6  >=200:  99%  mean frames    230
+teach_fixed_s1 mean   277.0 +/-  19.4  >=200: 100%  mean frames    218
+teach_fixed_s2 mean   276.8 +/-  18.2  >=200: 100%  mean frames    225
+time_s0      mean   249.8 +/-  23.0  >=200:  98%  mean frames    361
+teach_safe_s0 mean   253.2 +/-  96.9  >=200:  95%  mean frames    257
+saved compare.png
