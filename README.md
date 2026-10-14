@@ -9,8 +9,9 @@
 ![Stable-Baselines3](https://img.shields.io/badge/Stable--Baselines3-2.9.0-orange)
 ![CPU only](https://img.shields.io/badge/runs%20on-CPU%20only-success)
 ![License](https://img.shields.io/badge/license-MIT-green)
+[![Live chart](https://img.shields.io/badge/live%20chart-open-ff69b4)](https://rcidshacker.github.io/rocket-kun/)
 
-[**TL;DR**](#-tldr) · [**How it works**](#-how-it-works) · [**Results**](#-results) · [**Findings**](#-what-the-numbers-show) · [**Run it**](#-run-it-yourself) · [**FAQ**](#-faq)
+[**📈 Live interactive chart**](https://rcidshacker.github.io/rocket-kun/) · [**TL;DR**](#-tldr) · [**How it works**](#-how-it-works) · [**Results**](#-results) · [**Findings**](#-what-the-numbers-show) · [**Run it**](#-run-it-yourself) · [**FAQ**](#-faq)
 
 <table>
 <tr>
@@ -95,6 +96,8 @@ Mean over 3 training seeds (per-seed values in brackets). "Reached 200" is the s
 
 ![Score per model, 100 flights each](compare.png)
 
+👉 **[Open the interactive version](https://rcidshacker.github.io/rocket-kun/)** to switch metric, view each seed and hover for exact numbers.
+
 <details>
 <summary><b>📋 Every model, every seed (click to expand)</b></summary>
 
@@ -168,6 +171,7 @@ Each 1M-step run takes minutes on CPU (I did not time them precisely). Results w
 | [`compare.py`](compare.py) | score models over many raw-game flights and draw the chart |
 | [`watch.py`](watch.py) | watch or record flights |
 | [`test_shaped.py`](test_shaped.py) | check that each reward rule behaves as described |
+| [`docs/`](docs/) | the interactive results page (plain HTML and JS), served by GitHub Pages |
 | `models/` | the trained models behind the table |
 | `logs/`, `results.txt`, `compare.png` | training logs, raw scores, chart |
 | `clips/`, `assets/` | recorded flights (mp4) and the GIFs above |
