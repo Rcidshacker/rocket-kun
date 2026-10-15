@@ -5,3 +5,16 @@ __pycache__/
 
 # third-party article this project was inspired by (not ours to redistribute)
 Training an AI to land a rocket*.md
+
+# graft's local graph cache — regenerable, not committed (run `graft build`).
+/graft/
+
+# Credentials, dumps and generated files (never commit)
+*.pem
+*.key
+token.json
+demo_token.json
+.env
+.env.*
+!.env.example
+*.log
